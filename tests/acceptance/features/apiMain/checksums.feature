@@ -178,9 +178,7 @@ Feature: checksums
     And user "Alice" has uploaded file "filesForUpload/textfile.txt" to "/myChecksumFile.txt" with checksum "MD5:d70b40f177b14b470d1756a3c12b963a"
     When user "Alice" copies file "/myChecksumFile.txt" to "/myChecksumFileCopy.txt" using the WebDAV API
     Then the HTTP status code should be "201"
-    When user "Alice" downloads file "/myChecksumFileCopy.txt" using the WebDAV API
-    Then the HTTP status code should be "200"
-    And the header checksum should match "SHA1:3ee962b839762adb0ad8ba6023a4690be478de6f"
+    And the header checksum when user "Alice" downloading file "/myChecksumFileCopy.txt" using the WebDAV API should match "SHA1:3ee962b839762adb0ad8ba6023a4690be478de6f"
     Examples:
       | dav_version |
       | new         |
@@ -198,10 +196,8 @@ Feature: checksums
     And using <dav_version> DAV path
     And user "Brian" has been created with default attributes and without skeleton files
     And user "Alice" has uploaded file "filesForUpload/textfile.txt" to "/myChecksumFile.txt" with checksum "MD5:d70b40f177b14b470d1756a3c12b963a"
-    When user "Alice" shares file "/myChecksumFile.txt" with user "Brian" using the sharing API
-    Then the HTTP status code should be "200"
-    When user "Brian" accepts share "/myChecksumFile.txt" offered by user "Alice" using the sharing API
-    Then the HTTP status code should be "200"
+    And user "Alice" has shared file "/myChecksumFile.txt" with user "Brian"
+    And user "Brian" has accepted share "/myChecksumFile.txt" offered by user "Alice"
     When user "Brian" requests the checksum of "/Shares/myChecksumFile.txt" via propfind
     Then the HTTP status code should be "207"
     And the webdav checksum should match "SHA1:3ee962b839762adb0ad8ba6023a4690be478de6f MD5:d70b40f177b14b470d1756a3c12b963a ADLER32:8ae90960"
@@ -227,39 +223,33 @@ Feature: checksums
     When user "Brian" accepts share "/myChecksumFile.txt" offered by user "Alice" using the sharing API
     Then the HTTP status code should be "200"
     When user "Brian" uploads file with checksum "SHA1:ce5582148c6f0c1282335b87df5ed4be4b781399" and content "Some Text" to "/Shares/myChecksumFile.txt" using the WebDAV API
-    Then the HTTP status code should be "<response_status>"
+    Then the HTTP status code should be "204"
     And as user "Alice" the webdav checksum of "/myChecksumFile.txt" via propfind should match "<checksum>"
     Examples:
-      | dav_version | checksum                                                                                            | response_status |
-      | new         | SHA1:ce5582148c6f0c1282335b87df5ed4be4b781399 MD5:56e57920c3c8c727bfe7a5288cdf61c4 ADLER32:1048035a | 204             |
+      | dav_version | checksum                                                                                            |
+      | new         | SHA1:ce5582148c6f0c1282335b87df5ed4be4b781399 MD5:56e57920c3c8c727bfe7a5288cdf61c4 ADLER32:1048035a |
 
     @personalSpace
     Examples:
-      | dav_version | checksum                                                                                            | response_status |
-      | spaces      | SHA1:3ee962b839762adb0ad8ba6023a4690be478de6f MD5:d70b40f177b14b470d1756a3c12b963a ADLER32:8ae90960 |409              |
+      | dav_version | checksum                                                                                            |
+      | spaces      | SHA1:3ee962b839762adb0ad8ba6023a4690be478de6f MD5:d70b40f177b14b470d1756a3c12b963a ADLER32:8ae90960 |
 
   @issue-ocis-reva-56 @notToImplementOnOCIS @newChunking @issue-ocis-1321
   Scenario: Upload new DAV chunked file where checksum matches
     Given using new DAV path
-    When user "Alice" creates a new chunking upload with id "chunking-42" using the WebDAV API
-    Then the HTTP status code should be "201"
+    And user "Alice" has created a new chunking upload with id "chunking-42"
     When user "Alice" uploads new chunk file "2" with "BBBBB" to id "chunking-42" using the WebDAV API
-    Then the HTTP status code should be "201"
-    When user "Alice" uploads new chunk file "3" with "CCCCC" to id "chunking-42" using the WebDAV API
-    Then the HTTP status code should be "201"
-    When user "Alice" moves new chunk file with id "chunking-42" to "/myChunkedFile.txt" with checksum "SHA1:5d84d61b03fdacf813640f5242d309721e0629b1" using the WebDAV API
-    Then the HTTP status code should be "201"
+    And user "Alice" uploads new chunk file "3" with "CCCCC" to id "chunking-42" using the WebDAV API
+    And user "Alice" moves new chunk file with id "chunking-42" to "/myChunkedFile.txt" with checksum "SHA1:5d84d61b03fdacf813640f5242d309721e0629b1" using the WebDAV API
+    Then the HTTP status code of responses on all endpoints should be "201"
 
   @issue-ocis-reva-56 @notToImplementOnOCIS @newChunking @issue-ocis-1321
   Scenario: Upload new DAV chunked file where checksum does not match
     Given using new DAV path
-    When user "Alice" creates a new chunking upload with id "chunking-42" using the WebDAV API
-    Then the HTTP status code should be "201"
+    And user "Alice" has created a new chunking upload with id "chunking-42"
     When user "Alice" uploads new chunk file "2" with "BBBBB" to id "chunking-42" using the WebDAV API
-    Then the HTTP status code should be "201"
-    When user "Alice" uploads new chunk file "3" with "CCCCC" to id "chunking-42" using the WebDAV API
-    Then the HTTP status code should be "201"
-    When user "Alice" moves new chunk file with id "chunking-42" to "/myChunkedFile.txt" with checksum "SHA1:f005ba11" using the WebDAV API
+    And user "Alice" uploads new chunk file "3" with "CCCCC" to id "chunking-42" using the WebDAV API
+    And user "Alice" moves new chunk file with id "chunking-42" to "/myChunkedFile.txt" with checksum "SHA1:f005ba11" using the WebDAV API
     Then the HTTP status code should be "400"
     And user "Alice" should not see the following elements
       | /myChunkedFile.txt |
@@ -455,7 +445,7 @@ Feature: checksums
 
   @skipOnStorage:ceph @skipOnStorage:scality @files_primary_s3-issue-224
   @issue-ocis-reva-196
- Scenario Outline: Uploading a file with invalid SHA1 checksum overwriting an existing file
+  Scenario Outline: Uploading a file with invalid SHA1 checksum overwriting an existing file
     Given using <dav_version> DAV path
     And user "Alice" has uploaded file with content "ownCloud test text file 0" to "/textfile0.txt"
     When user "Alice" uploads file "filesForUpload/textfile.txt" to "/textfile0.txt" with checksum "SHA1:f005ba11f005ba11f005ba11f005ba11f005ba11" using the WebDAV API

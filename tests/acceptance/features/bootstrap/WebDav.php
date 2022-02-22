@@ -3943,6 +3943,7 @@ trait WebDav {
 			$data,
 			"uploads"
 		);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -4120,6 +4121,7 @@ trait WebDav {
 			$dest,
 			$headers
 		);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**

@@ -328,6 +328,16 @@ class ChecksumContext implements Context {
 	}
 
 	/**
+     * @Then the header checksum when user :arg1 downloading file :arg2 using the WebDAV API should match :arg3
+     */
+    public function theHeaderChecksumWhenDownloadingFileUsingTheWebdavApiShouldMatch(string $user, string $fileName, string $expectedChecksum):void
+    {
+        $this->featureContext->userDownloadsFileUsingTheAPI($user, $fileName);
+		$this->theHeaderChecksumShouldMatch($expectedChecksum);
+    }
+
+
+	/**
 	 * @Then the webdav checksum should be empty
 	 *
 	 * @return void
